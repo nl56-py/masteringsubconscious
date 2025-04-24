@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 30% 98%;
+    --foreground: 220 30% 10%;
+
+    --card: 220 30% 100%;
+    --card-foreground: 220 30% 10%;
+
+    --popover: 220 30% 100%;
+    --popover-foreground: 220 30% 10%;
+
+    --primary: 220 70% 25%;
+    --primary-foreground: 220 30% 98%;
+
+    --secondary: 220 30% 90%;
+    --secondary-foreground: 220 70% 25%;
+
+    --accent: 45 80% 60%;
+    --accent-foreground: 220 30% 10%;
+
+    --muted: 220 30% 95%;
+    --muted-foreground: 220 30% 40%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 30% 85%;
+    --input: 220 30% 85%;
+    --ring: 220 70% 25%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  .container {
+    @apply px-4 md:px-6 max-w-6xl mx-auto;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  .glass-card {
+    @apply bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg;
+  }
+  
+  .nav-link {
+    @apply relative font-medium text-foreground/80 transition-colors hover:text-foreground
+      after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary 
+      after:transition-all hover:after:w-full;
+  }
+  
+  .category-badge {
+    @apply inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium 
+      text-primary transition-colors hover:bg-primary/20;
+  }
+}

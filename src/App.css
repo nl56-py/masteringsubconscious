@@ -1,0 +1,9 @@
+
+/* Navy blue focus and selection styles */
+*:focus {
+  outline-color: hsl(220, 70%, 25%);
+}
+
+::selection {
+  background-color: hsl(220, 70%, 25%, 0.2);
+}
