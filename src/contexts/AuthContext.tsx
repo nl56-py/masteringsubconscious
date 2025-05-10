@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,29 +30,25 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        
-        // Check if user is admin
-        if (currentSession?.user) {
-          setTimeout(() => {
-            checkIsAdmin(currentSession.user.id);
-          }, 0);
+        if (currentSession?.user?.id) {
+          checkIsAdmin(currentSession.user.id);
         } else {
           setIsAdmin(false);
         }
       }
     );
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
+      if (error) {
+        console.error("Error fetching session:", error.message);
+      }
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
+      if (currentSession?.user?.id) {
         checkIsAdmin(currentSession.user.id);
       }
       setLoading(false);
@@ -67,19 +62,19 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const checkIsAdmin = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from("admins")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
+        .from("roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
       if (error) {
-        console.error("Error checking admin status:", error);
+        console.error("Error checking admin role:", error.message, error.code);
         setIsAdmin(false);
-      } else {
-        setIsAdmin(!!data);
+        return;
       }
-    } catch (error) {
-      console.error("Error checking admin status:", error);
+      setIsAdmin(!!data);
+    } catch (error: any) {
+      console.error("Unexpected error checking admin role:", error.message);
       setIsAdmin(false);
     }
   };
@@ -90,25 +85,29 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         email,
         password,
       });
-
       if (error) {
+        const message = error.message.includes("Invalid login")
+          ? "Invalid email or password"
+          : error.message;
         toast({
           title: "Login failed",
-          description: error.message,
+          description: message,
           variant: "destructive",
         });
-        throw error;
+        throw new Error(message);
       }
-      
-      // Check if user is admin
-      if (data.user) {
-        const { data: adminData, error: adminError } = await supabase
-          .from("admins")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
-
-        if (adminError || !adminData) {
+      if (data.user?.id) {
+        const { data: roleData, error: roleError } = await supabase
+          .from("roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (roleError) {
+          console.error("Role check error:", roleError.message, roleError.code);
+          throw new Error("Error verifying admin status");
+        }
+        if (!roleData) {
           toast({
             title: "Access denied",
             description: "You do not have admin privileges",
@@ -117,15 +116,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           await supabase.auth.signOut();
           throw new Error("Not authorized as admin");
         }
-        
         setIsAdmin(true);
         toast({
           title: "Login successful",
           description: "Welcome to the admin panel",
         });
+      } else {
+        throw new Error("No user data returned");
       }
     } catch (error: any) {
-      console.error("Sign in error:", error);
+      console.error("Sign in error:", error.message);
       throw error;
     }
   };
@@ -138,8 +138,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         title: "Logged out",
         description: "You have been successfully logged out",
       });
-    } catch (error) {
-      console.error("Sign out error:", error);
+    } catch (error: any) {
+      console.error("Sign out error:", error.message);
       toast({
         title: "Logout failed",
         description: "An error occurred during logout",
