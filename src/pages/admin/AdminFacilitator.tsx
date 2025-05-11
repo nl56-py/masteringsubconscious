@@ -120,14 +120,14 @@ const AdminFacilitator = () => {
         const oldFileName = imageUrl.split("/").pop();
         if (oldFileName) {
           await supabase.storage
-            .from("facilitator_images")
+            .from("facilitator-images")
             .remove([oldFileName]);
         }
       }
 
       // Upload the new image
       const { error: uploadError } = await supabase.storage
-        .from("facilitator_images")
+        .from("facilitator-images")
         .upload(filePath, imageFile, {
           cacheControl: "3600",
           upsert: false,
@@ -137,7 +137,7 @@ const AdminFacilitator = () => {
 
       // Get the public URL
       const { data: urlData } = supabase.storage
-        .from("facilitator_images")
+        .from("facilitator-images")
         .getPublicUrl(filePath);
 
       return urlData.publicUrl;
