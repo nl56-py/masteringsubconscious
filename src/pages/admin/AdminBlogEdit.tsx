@@ -239,7 +239,7 @@ const AdminBlogEdit = () => {
 
       // Upload the new image
       const { error: uploadError, data } = await supabase.storage
-        .from("blog_images")
+        .from("blog-images")
         .upload(filePath, imageData.file!, {
           cacheControl: "3600",
           upsert: false,
@@ -249,7 +249,7 @@ const AdminBlogEdit = () => {
 
       // Get the public URL
       const { data: urlData } = supabase.storage
-        .from("blog_images")
+        .from("blog-images")
         .getPublicUrl(filePath);
 
       return urlData.publicUrl;
